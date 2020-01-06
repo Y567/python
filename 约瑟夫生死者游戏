@@ -1,0 +1,50 @@
+# 表示船上的人数
+n = 0
+# 表示离开船上的间隔人数
+m = 0
+# 最后船上的剩余人数
+k = 0
+# 活着的人数列表
+live = []
+# 死亡的人数列表
+dead = []
+# 用于标识人是否活着，1为活着，0为死亡
+check = 0
+# 存着所有人
+people = {}
+
+
+# 踢人下船的函数,i表示从哪个人开始
+def kick(index):
+    live_count = n
+    # count 为统计的变量
+    count = 1
+    while live_count > k:
+        if index == 0:
+            # 避免除余运算得出0的情况
+            index = index + 1
+        if people[index] == 0:
+            index = (index + 1) % (n + 1)
+            continue
+        if people[index] == 1:
+            if count == m:
+                people[index] = 0
+                print("{}号被众人仍在了海里，{}号大叫着救命！！！".format(index, index))
+                print(index)
+                live_count = live_count - 1
+                # 因为要从下一个开始计时了，所以当前被人下海的人为0，从下一个开始从1开始计时
+                count = 0
+                # 存活人数减1
+            count = (count + 1) % (m + 1)
+        index = (index + 1) % (n + 1)
+
+
+if __name__ == '__main__':
+    n = int(input("请输入船上的总人数："))
+    m = int(input("请输入间隔的人数："))
+    k = int(input("请输入船上最后应该剩余的人数："))
+    for i in range(n + 1):
+        # 从一号开始先设置人全部为存活状态
+        people[i + 1] = 1
+    # 这里调用踢人下船函数来踢人
+    kick(1)
