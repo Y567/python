@@ -1,0 +1,150 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html" charset="utf-8" />
+<meta name="viewport" content="initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+<title>约瑟夫生死者游戏</title>
+
+<link href="{{ url_for('static',filename='style.css') }}" rel="stylesheet" type="text/css" />
+
+</head>
+<body>
+<div style="float: left">
+	<form action="/resolve" method="post" onsubmit="return check();">
+	<div style="margin: 20px">
+		<input type="text" name = "n" id="n" placeholder="船上的总人数：">{{n}}</input><hr/>
+	    <input type="text" name = "m" id="m" placeholder="间隔的人数：">{{m}}</input><hr/>
+	    <input type="text" name = "k" id="k" placeholder="剩余的人数：">{{k}}</input><hr/>
+	    <input type="text" name = "index" id="index" placeholder="开始的人数：">{{index}}</input><hr/>
+	    <input type="submit" value="提交"/><hr/>
+	</div>
+</form>
+</div>
+<div class="rotate_wrap">
+	<img class="bg_img rotate_origin" id="i_bg" src="../static/images/img1.png">
+	<img class="cont_img rotate_origin1" id="i_cont" src="../static/images/img2.png">
+</div>
+
+<div class="btn" id="i_btn">开始</div>
+<div style="text-align: center"><b>死亡名单</b></div>
+<div class="text" style="text-align: center">
+	<label for="dead"></label><textarea style="height: 50px" id="dead" readonly="readonly" hidden="hidden">
+	{% for i in dead %}
+	{{i}}号
+	{% endfor %}
+	</textarea>
+</div>
+<div style="text-align: center"><b>幸存名单</b></div>
+<div class="text" style="text-align: center">
+	<label for="live"></label><textarea style="height: 50px;" id="live" readonly="readonly" hidden="hidden">
+	{% for i in live %}
+	{{i}}号
+	{% endfor %}
+	</textarea>
+</div>
+<script src="../static/js/jquery-1.8.3.min.js"></script>
+<script type="text/javascript">
+	// 转盘样式，a：旋转角度，p：概率（1代表100%），t：需要显示的其它信息（文案or分享）
+	var result_angle = [{a:0,p:0.1,t:'桃花朵朵开^_^'},{a:45,p:0.1,t:'哎呦，不错哦^_^'},{a:90,p:0.1,t:'天天开心呢^_^'},{a:135,p:0.3,t:'给姐笑一个^_^'},{a:180,p:0.1,t:'今天天气不错^_^'},{a:225,p:0.1,t:'心情大好哈哈^_^'},{a:270,p:0.1,t:'中奖五百万^_^'},{a:315,p:0.1,t:'打架你赢了^_^'}];
+	var rotate = {
+		rotate_angle : 0, //起始位置为0
+		flag_click : true, //转盘转动过程中不可再次触发
+		calculate_result:function(type,during_time){//type:0,箭头转动,1,背景转动;during_time:持续时间(s)
+			var self = this;
+			type = type || 0; // 默认为箭头转动
+			during_time = during_time || 1; // 默认为1s
+
+			var rand_num = Math.ceil(Math.random() * 100); // 用来判断的随机数，1-100
+
+			var result_index; // 最终要旋转到哪一块，对应result_angle的下标
+			var start_pos = end_pos = 0; // 判断的角度值起始位置和结束位置
+
+			for(var i in result_angle){
+				start_pos = end_pos + 1; // 区块的起始值
+				end_pos = end_pos + 100 * result_angle[i].p; // 区块的结束值
+
+				if(rand_num >= start_pos && rand_num <= end_pos){ // 如果随机数落在当前区块，那么获取到最终要旋转到哪一块
+					result_index = i;
+					break;
+				}
+			}
+
+			var rand_circle = Math.ceil(Math.random() * 2) + 1; // 附加多转几圈，2-3
+
+			self.flag_click = false; // 旋转结束前，不允许再次触发
+			if(type == 1){ // 转动盘子
+				self.rotate_angle =  self.rotate_angle - rand_circle * 360 - result_angle[result_index].a - self.rotate_angle % 360;
+				$('#i_bg').css({
+					'transform': 'rotate('+self.rotate_angle+'deg)',
+					'-ms-transform': 'rotate('+self.rotate_angle+'deg)',
+					'-webkit-transform': 'rotate('+self.rotate_angle+'deg)',
+					'-moz-transform': 'rotate('+self.rotate_angle+'deg)',
+					'-o-transform': 'rotate('+self.rotate_angle+'deg)',
+					'transition': 'transform ease-out '+during_time+'s',
+					'-moz-transition': '-moz-transform ease-out '+during_time+'s',
+					'-webkit-transition': '-webkit-transform ease-out '+during_time+'s',
+					'-o-transition': '-o-transform ease-out '+during_time+'s'
+				});
+			}else{ // 转动指针
+				self.rotate_angle = self.rotate_angle + rand_circle * 360 + result_angle[result_index].a - self.rotate_angle % 360;
+				$('#i_cont').css({
+					'transform': 'rotate('+self.rotate_angle+'deg)',
+					'-ms-transform': 'rotate('+self.rotate_angle+'deg)',
+					'-webkit-transform': 'rotate('+self.rotate_angle+'deg)',
+					'-moz-transform': 'rotate('+self.rotate_angle+'deg)',
+					'-o-transform': 'rotate('+self.rotate_angle+'deg)',
+					'transition': 'transform ease-out '+during_time+'s',
+					'-moz-transition': '-moz-transform ease-out '+during_time+'s',
+					'-webkit-transition': '-webkit-transform ease-out '+during_time+'s',
+					'-o-transition': '-o-transform ease-out '+during_time+'s'
+				});
+			}
+
+			// 旋转结束后，允许再次触发
+			setTimeout(function(){ 
+				self.flag_click = true;
+				// 告诉结果
+				alert("生存还是死亡去看答案吧！！！");
+			},during_time*1000);
+		}
+	};
+
+	function show(){
+		$("#dead").removeAttr("hidden");
+		$("#live").removeAttr("hidden");
+	}
+
+	function check(){
+		var n = document.getElementById("n").value;
+		var m = document.getElementById("m").value;
+		var k = document.getElementById("k").value;
+		var index = document.getElementById("index").value;
+		if(isNaN(n) || isNaN(m) || isNaN(k) || isNaN(index)){
+			alert("请输入数字，才能开始游戏！");
+			return false;
+		}
+		if(n == "" || m == "" || k == "" || index == ""){
+			alert("不能提交空内容！");
+			return false;
+		}
+
+		return true;
+	}
+
+
+	$(document).ready(function(){
+	
+		$('#i_btn').click(function(){
+			if(rotate.flag_click){ // 旋转结束前，不允许再次触发
+				rotate.calculate_result(1,1);
+				setTimeout(show,2000);
+			}
+		});
+
+	});
+</script>
+<div style="text-align:center;margin:50px 0; font:normal 14px/24px 'MicroSoft YaHei';">
+<p>约瑟夫生死者游戏</p>
+</div>
+</body>
+</html>
